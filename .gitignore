@@ -73,3 +73,7 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Sembunyikan file konfigurasi dan kunci API
+/src/config.js
+/src/supabase/client.js
