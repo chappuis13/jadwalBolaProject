@@ -7,12 +7,15 @@ import {
   FlatList, 
   Image, 
   Alert,
-  RefreshControl
+  RefreshControl,
+  useWindowDimensions
 } from 'react-native';
 import { getTeams } from '../services/api';
 import { List, Divider, IconButton, Searchbar } from 'react-native-paper';
 import { useAuth } from '../context/AuthContext';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
+
+const BREAKPOINTS = { tablet: 600, largeTablet: 1024 };
 
 const TimScreen = ({ route, navigation }) => {
   const { leagueCode } = route.params;
@@ -22,6 +25,12 @@ const TimScreen = ({ route, navigation }) => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
+
+  const { width } = useWindowDimensions();
+  
+  let numColumns = 1;
+  if (width >= BREAKPOINTS.largeTablet) numColumns = 3;
+  else if (width >= BREAKPOINTS.tablet) numColumns = 2;
 
   const fetchTeams = async () => {
     try {
@@ -77,12 +86,13 @@ const TimScreen = ({ route, navigation }) => {
     const isFav = isFavorite(item.id);
 
     return (
-      <View>
+      <View style={{ flex: 1, margin: 5 }}>
         <List.Item
           title={item.name}
           titleStyle={styles.titleName}
           description={`Stadion: ${item.venue || 'N/A'}`}
           descriptionStyle={styles.descriptionText}
+          style={[styles.cardItem, numColumns > 1 && styles.cardGrid]}
           left={() => (
             <Image 
               source={{ uri: item.crest }} 
@@ -102,7 +112,7 @@ const TimScreen = ({ route, navigation }) => {
             team: item 
           })}
         />
-        <Divider style={styles.divider} />
+        {numColumns === 1 && <Divider style={styles.divider} />}
       </View>
     );
   };
@@ -118,10 +128,14 @@ const TimScreen = ({ route, navigation }) => {
       />
       
       <FlatList
+        key={numColumns}
+        numColumns={numColumns}
+        columnWrapperStyle={numColumns > 1 ? { justifyContent: 'space-between' } : null}
         data={filteredTeams}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         style={styles.listContainer}
+        contentContainerStyle={{ padding: 10 }}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -155,6 +169,20 @@ const styles = StyleSheet.create({
   listContainer: {
     backgroundColor: COLORS.card,
   },
+  
+  cardItem: {
+    backgroundColor: COLORS.card,
+  },
+  cardGrid: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 8,
+    elevation: 2,
+    height: 100, 
+    justifyContent: 'center',
+    paddingRight: 0,
+  },
+
   logo: { 
     width: 40, 
     height: 40, 
@@ -172,7 +200,7 @@ const styles = StyleSheet.create({
     color: COLORS.subtext,
   },
   iconButton: {
-    marginRight: 8,
+    marginRight: 0,
   },
   divider: {
     backgroundColor: COLORS.border,
